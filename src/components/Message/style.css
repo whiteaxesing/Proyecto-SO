@@ -1,0 +1,14 @@
+.dropdown-content {
+    right: 0;
+  }
+
+.input[type="text"]:focus   
+{
+         background: transparent;
+         border: none;
+         outline-width: 0;
+}
+
+.myDivClass{
+  color: black;
+}
