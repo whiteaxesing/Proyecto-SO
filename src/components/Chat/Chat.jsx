@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Message from '../Message/Message';
 import SendMessage from '../SendMessage';
-import { db } from '../../firebase';
-import { query, collection, orderBy, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
+import { query, collection, orderBy, onSnapshot, where, getDocs } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import * as CryptoJS from 'crypto-js';
 
 const style = {
@@ -10,8 +11,22 @@ const style = {
 };
 
 const Chat = () => {
+  const [user] = useAuthState(auth);
   const [messages, setMessages] = useState([]);
+  const [blocks, setBlocks] = useState([]);
   const scroll = useRef();
+
+  useEffect(() => {
+    const q = query(collection(db, 'blocks'), where("blockedBy", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      let blocks = [];
+      querySnapshot.forEach((doc) => {
+        blocks.push({ ...doc.data(), id: doc.id });
+      });
+      setBlocks(blocks);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, 'messages'), orderBy('timestamp'));
@@ -40,12 +55,24 @@ const Chat = () => {
 
   return (
     <>
-      <main className={style.main}>
-        {messages &&
-          messages.map((message) => (
+      {(() => {
+      let msgs = messages;
+      if (blocks != null){
+        for(let i = 0; i < msgs.length; i++){ 
+          for(let j = 0; j < blocks.length; j++){ 
+            msgs = msgs.filter(message => message.uid !== blocks[j].userBlocked);
+          }
+        }
+      }
+      return(
+        <main className={style.main}>
+          {msgs &&
+          msgs.map((message) => (
             <Message key={message.id} message={message} />
-          ))}
-      </main>
+          ))} 
+        </main>
+      );
+      })()}
       <SendMessage scroll={scroll} />
       <span ref={scroll}></span>
     </>
