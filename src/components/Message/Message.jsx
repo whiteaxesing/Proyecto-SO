@@ -55,7 +55,8 @@ const Message = ({ message }) => {
   function bloquear(id) {
     addDoc(collection(db, 'blocks'), {
       blockedBy: user.uid,
-      userBlocked: message.uid
+      userBlocked: message.uid,
+      userBlockerUsername: message.name
       }
     )
   }

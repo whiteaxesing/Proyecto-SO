@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Message from '../Message/Message';
 import SendMessage from '../SendMessage';
 import { auth, db } from '../../firebase';
-import { query, collection, orderBy, onSnapshot, where, getDocs } from 'firebase/firestore';
+import { query, collection, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import * as CryptoJS from 'crypto-js';
 

@@ -14,7 +14,7 @@ const Navbar = () => {
   return (
     <div className={style.nav}>
       
-      <h1 className={style.heading}>Chat</h1>
+      <h1 className={style.heading}>ChatTEC</h1>
       {user ? <Stats /> : null}
       {user ? <LogOut /> : <SignIn />}
 

@@ -1,5 +1,6 @@
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, doc, deleteDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
+import { ButtonDropdown, DropdownItem, DropdownMenu, DropdownToggle, Button, Input} from 'reactstrap';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import {auth, db} from '../firebase'
 
@@ -8,8 +9,28 @@ const style = {
 }
 
 const Stats = () => {
+    const [input, setInput] = useState('');
     const [user] = useAuthState(auth);
     const [usuarios, setUsuarios] = useState([]);
+    const [blocks, setBlocks] = useState([]);
+    const [dropdown, setDropdown] = useState(false);
+
+    const abrirCerrarDropdown = () => {
+      setDropdown(!dropdown)
+    }
+  
+    useEffect(() => {
+      const q = query(collection(db, 'blocks'), where("blockedBy", "==", user.uid));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        let blocks = [];
+        querySnapshot.forEach((doc) => {
+          blocks.push({ ...doc.data(), id: doc.id });
+        });
+        setBlocks(blocks);
+      });
+      return () => unsubscribe();
+    }, []);
+
   useEffect(() => {
     const q = query(collection(db, 'users'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -56,19 +77,65 @@ const Stats = () => {
         return;
     }
 
-    function mostrarBloqueados(){
-      alert("No tiene bloqueados\n"+user.uid);
-      return;
+  function mostrarBloqueados(id){
+    deleteDoc(doc(db, "blocks", id));
   }
+
+
+  function handleKeyPress(target) {
+    if(target.charCode==13){
+      alert('Enter clicked!!!');    
+    } 
+  }
+
 
   return (
     <div>
-    <button onClick={() => mostrarEstadisticas()} className={style.button}>
-        Estadísticas
-    </button>
-    <button onClick={() => mostrarBloqueados()} className={style.button}>
-        Bloqueados
-    </button>
+    
+    
+    <div className="row justify-content-center">
+        <div className="col-4">
+          <Button color="primary" onClick={() => mostrarEstadisticas()} className={style.button}>
+              Stats
+          </Button>
+        </div>
+        <div className="col-4">
+          <ButtonDropdown hidden={ blocks.length === 0 ? true : false }  isOpen={dropdown} toggle={abrirCerrarDropdown}>
+            <DropdownToggle caret color="primary"> Blocks </DropdownToggle> 
+              <DropdownMenu>
+
+              {(() => {
+                return(
+                  <main className={style.main}>
+                    {blocks && 
+                    blocks.map((block) => (
+                      <DropdownItem onClick={() => mostrarBloqueados(block.id)}>Desbloquear a {block.userBlockerUsername}</DropdownItem>
+                    ))} 
+                  </main>
+                );})()
+              }
+              </DropdownMenu>
+          </ButtonDropdown>
+        </div>
+        <div className="col-4">
+          <Input
+            onKeyPress={handleKeyPress} 
+            hidden={false}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className={style.input}
+            type='text'
+            placeholder='Buscar'
+          />
+        </div>
+    </div>
+    
+
+      
+
+    
+  
+
     </div>
   );
 };
